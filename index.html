@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mesai Takip Pro</title>
+    <style>
+        :root {
+            --bg: #060818;
+            --blue: #4f8eff;
+            --green: #00e676;
+            --red: #ff3d57;
+            --border: rgba(255,255,255,0.08);
+            --text2: #8899bb;
+            --text3: #3d4a63;
+            --glass: rgba(255,255,255,0.05);
+            --glass-border: rgba(255,255,255,0.12);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: var(--bg);
+            color: white; margin: 0; padding: 0;
+            height: 100%; overflow: hidden;
+        }
+
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(79,142,255,0.18) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(120,60,255,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(0,200,150,0.08) 0%, transparent 60%);
+            pointer-events: none; z-index: 0;
+        }
+
+        /* Ana wrapper - tam ekran flex */
+        .app-wrapper {
+            display: flex; flex-direction: column;
+            height: 100vh; max-width: 430px;
+            margin: 0 auto; position: relative; z-index: 1;
+            overflow: hidden;
+        }
+
+        /* Sabit üst kısım */
+        .fixed-top {
+            flex-shrink: 0;
+            padding: 10px 10px 0;
+        }
+
+        /* Kaydırılabilir tablo alanı */
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 0 calc(90px + env(safe-area-inset-bottom, 90px)) 0;
+            -webkit-overflow-scrolling: touch;
+        }
+        .scroll-area::-webkit-scrollbar { width: 0; }
+
+        /* fixed-top padding düzeltme */
+        .fixed-top { padding: 10px 10px 0; }
+
+        .container {
+            width: 100%;
+            position: relative; z-index: 1;
+        }
+
+        /* ── 3D BUTTON BASE ── */
+        .btn-3d {
+            border: none; cursor: pointer;
+            position: relative; overflow: hidden;
+            transition: transform 0.1s, box-shadow 0.1s;
+            -webkit-user-select: none;
+            font-weight: 800;
+            border-radius: 16px;
+        }
+        /* Shine overlay */
+        .btn-3d::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+            border-radius: 16px 16px 60% 60%;
+            pointer-events: none;
+        }
+        .btn-3d:active { transform: scale(0.93) translateY(3px); }
+
+        /* Blue - Dark Glass */
+        .btn-blue {
+            background: rgba(20,40,100,0.7);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(79,142,255,0.35) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.4);
+            color: rgba(100,180,255,0.95);
+        }
+        .btn-blue:active { background: rgba(30,60,140,0.8); transform: scale(0.97) !important; }
+
+        /* Yellow - Dark Glass */
+        .btn-yellow {
+            background: rgba(80,50,0,0.7);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,190,40,0.35) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.4);
+            color: rgba(255,210,80,0.95);
+        }
+        .btn-yellow:active { background: rgba(100,65,0,0.8); transform: scale(0.97) !important; }
+
+        /* Red - Dark Glass */
+        .btn-red {
+            background: rgba(80,10,20,0.7);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,60,80,0.35) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.4);
+            color: rgba(255,100,120,0.95);
+        }
+        .btn-red:active { background: rgba(100,15,25,0.8); transform: scale(0.97) !important; }
+
+        /* Vergi renkleri */
+        .btn-vg-15 {
+            background: rgba(0,60,25,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0,200,80,0.35) !important; color: rgba(80,255,150,0.95);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.4);
+        }
+        .btn-vg-15:active { background: rgba(0,80,30,0.8); transform: scale(0.97) !important; }
+
+        .btn-vg-20 {
+            background: rgba(30,60,0,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(100,200,30,0.35) !important; color: rgba(160,255,80,0.95);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.4);
+        }
+        .btn-vg-20:active { background: rgba(40,80,0,0.8); transform: scale(0.97) !important; }
+
+        .btn-vg-27 {
+            background: rgba(80,40,0,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,140,30,0.35) !important; color: rgba(255,180,80,0.95);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.4);
+        }
+        .btn-vg-27:active { background: rgba(100,50,0,0.8); transform: scale(0.97) !important; }
+
+        .btn-vg-35 {
+            background: rgba(80,10,10,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,50,50,0.35) !important; color: rgba(255,120,120,0.95);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.4);
+        }
+        .btn-vg-35:active { background: rgba(100,15,15,0.8); transform: scale(0.97) !important; }
+
+        /* ── ANNUAL CARD ── */
+        .annual-card {
+            background: linear-gradient(135deg, #0f1e3a 0%, #0a1428 100%);
+            border-radius: 10px;
+            border: 1px solid rgba(26,109,255,0.15);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+            margin-bottom: 10px;
+            padding: 6px 10px;
+        }
+
+        .annual-year {
+            font-size: 10px; font-weight: 900;
+            color: rgba(255,255,255,0.35); letter-spacing: 2px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+        }
+
+        .annual-row {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .annual-row:last-child { border-bottom: none; }
+
+        .annual-row-left { display: flex; align-items: center; gap: 5px; }
+
+        .annual-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+        .annual-row-label { font-size: 9px; font-weight: 600; color: var(--text2); }
+
+        .annual-row-right { display: flex; gap: 6px; align-items: center; }
+
+        .annual-chip { font-size: 9px; font-weight: 800; white-space: nowrap; }
+        .annual-chip.normal  { color: #7eb8ff; }
+        .annual-chip.pazar   { color: #ff8fa3; }
+        .annual-chip.highlight { color: #6dffb3; font-size: 10px; }
+
+        @keyframes kazancGlow {
+            0%   { color: #6dffb3; text-shadow: 0 0 4px rgba(109,255,179,0.4); }
+            50%  { color: #ffffff; text-shadow: 0 0 12px rgba(109,255,179,1), 0 0 24px rgba(109,255,179,0.6); }
+            100% { color: #6dffb3; text-shadow: 0 0 4px rgba(109,255,179,0.4); }
+        }
+        .kazanc-anim {
+            animation: kazancGlow 1.6s ease-in-out infinite;
+        }
+
+        /* ── DASHBOARD ROW (Saat + Vergi + Tarih + Ay) ── */
+        .dashboard-row {
+            margin-bottom: 10px;
+            background: linear-gradient(145deg, #111827, #0d1420);
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.06);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.4), 0 10px 18px rgba(0,0,0,0.35);
+            overflow: hidden;
+            display: flex;
+            position: relative;
+        }
+        /* Dikey ayırıcı çizgiler - her buton arasında */
+        .dashboard-row > * {
+            border-right: 1px solid rgba(255,255,255,0.1) !important;
+        }
+        .dashboard-row > *:last-child {
+            border-right: none !important;
+        }
+
+        .ucret-btn {
+            flex: 1.8; padding: 8px 10px;
+            display: flex; flex-direction: column;
+            gap: 2px; text-align: left; min-height: 0;
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: inset 0 -5px 0 rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+        }
+        .ucret-btn::after { display: none; }
+        .ucret-btn:active { transform: translateY(4px) !important; box-shadow: inset 0 -1px 0 rgba(0,0,0,0.2) !important; filter: brightness(0.88); }
+
+        .ucret-label {
+            font-size: 7px; font-weight: 800;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.65);
+            text-transform: uppercase;
+        }
+
+        .ucret-input-row {
+            display: flex; align-items: center;
+            gap: 3px; flex: 1;
+        }
+
+        .main-input {
+            flex: 1; background: transparent; border: none;
+            color: white; font-size: 14px; font-weight: 800;
+            outline: none; width: 100%; min-width: 0;
+        }
+        .main-input::placeholder { color: rgba(255,255,255,0.35); }
+        .main-input:disabled { color: rgba(255,255,255,0.45); }
+
+        .lock-btn {
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 5px; color: white;
+            padding: 3px 5px; font-size: 7px; font-weight: 800;
+            letter-spacing: 0.3px; white-space: nowrap;
+            cursor: pointer; transition: background 0.1s;
+            flex-shrink: 0;
+        }
+        .lock-btn:active { background: rgba(255,255,255,0.3); }
+
+        .vergi-btn {
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            gap: 1px; min-height: 0; padding: 6px 6px;
+            border-radius: 0 !important;
+            border: none !important;
+            box-shadow: inset 0 -5px 0 rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+        }
+        .vergi-btn::after { display: none; }
+        .vergi-btn:active { transform: translateY(4px) !important; box-shadow: inset 0 -1px 0 rgba(0,0,0,0.2) !important; filter: brightness(0.88); }
+
+        .vergi-label-txt {
+            font-size: 7px; font-weight: 800;
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+
+        .vergi-value-txt { font-size: 15px; font-weight: 900; }
+
+        /* ── NAV BUTTONS (Tarih + Ay kart) ── */
+        .nav-btns {
+            margin-bottom: 10px;
+            background: transparent;
+            border-radius: 0;
+            border: none;
+            overflow: visible;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            position: relative;
+        }
+        .nav-btns::after { display: none; }
+
+        .btn-nav {
+            padding: 16px 8px; font-size: 11px; letter-spacing: 0.3px;
+            border-radius: 14px !important;
+        }
+        .btn-nav::after { display: none; }
+        .btn-nav:active { transform: scale(0.97) !important; }
+
+        /* ── MONTH SUMMARY CARD ── */
+        .month-summary-card {
+            background: linear-gradient(145deg, #141e32, #0f1626);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+            margin-bottom: 5px;
+            padding: 8px 12px;
+        }
+
+        .month-card-title {
+            font-size: 7px; font-weight: 700; letter-spacing: 0.3px;
+            color: var(--text2); padding: 0 0 6px; line-height: 1.4;
+        }
+
+        .month-stat-row {
+            display: flex; align-items: baseline;
+            gap: 5px; padding: 3px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .month-stat-row:last-child { border-bottom: none; }
+
+        .month-stat-num {
+            font-size: 13px; font-weight: 900;
+        }
+        .month-stat-detail {
+            font-size: 10px; font-weight: 600;
+            opacity: 0.7;
+        }
+        .month-stat-label {
+            font-size: 9px; font-weight: 600;
+            margin-left: auto;
+            opacity: 0.6;
+        }
+
+        .clr-blue  { color: #7eb8ff; }
+        .clr-red   { color: #ff8fa3; }
+        .clr-green { color: #6dffb3; }
+
+        /* ── ACTION BUTTONS ── */
+        .action-row {
+            margin-bottom: 12px;
+            border-radius: 0;
+            overflow: visible;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            position: relative;
+        }
+        .btn-action {
+            height: 56px; font-size: 14px; font-weight: 900; letter-spacing: 1px;
+            border-radius: 14px !important;
+            position: relative;
+            transition: transform 0.12s;
+        }
+        .btn-action:not(:last-child)::before { display: none; }
+        .btn-action::after { display: none; }
+        .btn-action:active { transform: scale(0.95) !important; }
+
+        /* ── TABLE ── */
+        .table-card {
+            background: #0d1420;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(26,109,255,0.25);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5),
+                        0 0 12px rgba(26,109,255,0.1),
+                        inset 0 1px 0 rgba(26,109,255,0.08);
+        }
+
+        .table-title-bar {
+            padding: 11px 18px; font-size: 13px; font-weight: 900;
+            letter-spacing: 2px; color: rgba(255,255,255,0.85);
+            background: linear-gradient(135deg, rgba(79,142,255,0.2) 0%, rgba(120,60,255,0.15) 100%);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(79,142,255,0.2);
+            position: sticky; top: 0; z-index: 10;
+        }
+
+        .table-header {
+            display: grid; grid-template-columns: 1.2fr 1.5fr 0.6fr 1fr;
+            padding: 0;
+            font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.6); text-transform: uppercase;
+            position: sticky; top: 37px; z-index: 10;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .table-header span {
+            padding: 9px 10px;
+            border-right: 1px solid rgba(255,255,255,0.15);
+            display: flex; align-items: center;
+        }
+        .table-header span:last-child { border-right: none; }
+
+        #liste { padding: 0; display: flex; flex-direction: column; gap: 0; }
+
+        .row {
+            display: grid; grid-template-columns: 1.2fr 1.5fr 0.6fr 1fr;
+            padding: 0;
+            align-items: stretch;
+            cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
+            position: relative;
+            border-radius: 0;
+            overflow: hidden;
+            border-bottom: 1px solid rgba(0,0,0,0.3);
+        }
+        .row:last-child { border-bottom: none; }
+        .row.row-normal {
+            background: rgba(0,200,100,0.05);
+            border-left: 2px solid rgba(0,220,100,0.4);
+        }
+        .row.row-normal span { color: #44ff99 !important; }
+        .row.row-pazar {
+            background: rgba(255,60,80,0.05);
+            border-left: 2px solid rgba(255,60,80,0.4);
+        }
+        .row.row-pazar span { color: #ff6680 !important; }
+        .row:active {
+            transform: translateY(2px);
+            filter: brightness(1.15);
+        }
+        .row span {
+            padding: 8px 8px;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center;
+            line-height: 1;
+            color: white !important;
+        }
+        .row span:last-child { border-right: none; }
+        .row span:nth-child(1) { font-size: 14px; font-weight: 700; }
+        .row span:nth-child(2) { font-weight: 700; font-size: 15px; }
+        .row span:nth-child(3) { font-size: 14px; justify-content: center; }
+        .row span:nth-child(4) { font-weight: 800; font-size: 16px; }
+
+        .empty-state {
+            padding: 36px 20px; text-align: center;
+            color: var(--text3); font-size: 12px; font-weight: 600;
+        }
+
+        /* ── MODALS ── */
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        @keyframes modalScaleIn {
+            0%   { opacity: 0; transform: scale(0.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-overlay {
+            display: none; position: fixed; top:0; left:0;
+            width:100%; height:100%;
+            background: rgba(0,0,0,0.82);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            z-index: 2000; justify-content: center; align-items: flex-start;
+            padding: 55px 14px 20px; overflow-y: auto;
+        }
+        .modal-overlay.acik {
+            animation: modalFadeIn 0.28s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+        }
+        .modal-overlay.acik .modal-content {
+            animation: modalScaleIn 0.75s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+        }
+
+        .modal-content {
+            background: rgba(15,20,40,0.85);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            width: 100%; max-width: 360px; border-radius: 24px;
+            padding: 22px 18px;
+            border: 1px solid rgba(255,255,255,0.12);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); text-align: center;
+        }
+
+        .modal-content h2, .modal-content h3 {
+            margin-top:0; margin-bottom:14px; font-size:17px; font-weight:800;
+        }
+
+        .modal-input {
+            width:100%; background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:14px; color:white; padding:15px;
+            font-size:28px; font-weight:700; text-align:center;
+            margin:10px 0; display:block; outline:none;
+        }
+        .modal-input:focus { border-color: var(--blue); }
+
+        .modal-btn-row {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; margin-top: 14px;
+        }
+
+        .btn-cancel {
+            background: rgba(255,255,255,0.06); color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 14px; border-radius: 14px;
+            font-weight: 700; font-size: 14px;
+            cursor: pointer; transition: transform 0.1s;
+        }
+        .btn-cancel:active { transform: scale(0.96); }
+
+        .close-btn {
+            width:100%; margin-top:14px;
+            background:rgba(255,255,255,0.05); color:var(--text2);
+            border:1px solid rgba(255,255,255,0.08);
+            padding:13px; border-radius:14px;
+            font-weight:700; font-size:13px;
+            cursor:pointer; transition:transform 0.1s;
+        }
+        .close-btn:active { transform: scale(0.97); }
+
+        .tax-modal-btn { width:100%; padding:17px; border-radius:14px; font-size:15px; margin-bottom:8px; letter-spacing:0.3px; }
+        .tax-modal-btn:last-of-type { margin-bottom:0; }
+
+        .btn-delete-confirm {
+            background: linear-gradient(175deg,#ff6070 0%,#d41a30 55%,#aa0018 100%);
+            box-shadow: 0 6px 0 #700010, 0 8px 18px rgba(255,61,87,0.4);
+            color:white; border:none; padding:15px; width:100%;
+            border-radius:14px; font-weight:800; font-size:15px;
+            margin-bottom:10px; cursor:pointer; transition:transform 0.1s,box-shadow 0.1s;
+        }
+        .btn-delete-confirm:active { transform:scale(0.97) translateY(3px); box-shadow:0 2px 0 #700010; }
+
+        .btn-delete-cancel {
+            background:rgba(255,255,255,0.06); color:white;
+            border:1px solid rgba(255,255,255,0.1);
+            padding:15px; width:100%; border-radius:14px;
+            font-weight:700; font-size:15px; cursor:pointer; transition:transform 0.1s;
+        }
+        .btn-delete-cancel:active { transform:scale(0.97); }
+
+        .shift-btn { padding:22px 10px; border-radius:16px; font-size:14px; }
+
+        #daysGrid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:10px; }
+        .day-header { font-size:9px; color:var(--text2); text-align:center; font-weight:800; padding-bottom:7px; }
+        .day-cell { padding:10px 0; text-align:center; border-radius:9px; background:rgba(255,255,255,0.04); font-size:13px; font-weight:600; cursor:pointer; transition:transform 0.1s; }
+        .day-cell:active { transform:scale(0.88); }
+        @keyframes neonPulse {
+            0%   { box-shadow: 0 0 4px 1px rgba(255,210,0,0.5), 0 0 8px 2px rgba(255,210,0,0.2); border-color: rgba(255,210,0,0.8); }
+            50%  { box-shadow: 0 0 8px 3px rgba(255,210,0,0.8), 0 0 16px 5px rgba(255,210,0,0.3); border-color: rgba(255,210,0,1); }
+            100% { box-shadow: 0 0 4px 1px rgba(255,210,0,0.5), 0 0 8px 2px rgba(255,210,0,0.2); border-color: rgba(255,210,0,0.8); }
+        }
+        @keyframes neonPulseBlue {
+            0%   { box-shadow: 0 0 4px 1px rgba(26,109,255,0.5), 0 0 8px 2px rgba(26,109,255,0.2); border-color: rgba(26,109,255,0.8); }
+            50%  { box-shadow: 0 0 8px 3px rgba(26,109,255,0.9), 0 0 16px 5px rgba(26,109,255,0.35); border-color: rgba(26,109,255,1); }
+            100% { box-shadow: 0 0 4px 1px rgba(26,109,255,0.5), 0 0 8px 2px rgba(26,109,255,0.2); border-color: rgba(26,109,255,0.8); }
+        }
+        .day-cell-today {
+            border: 1.5px solid rgba(26,109,255,0.9);
+            animation: neonPulseBlue 2s ease-in-out infinite;
+        }
+
+        #monthModalGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+        .month-btn { display:flex; flex-direction:column; align-items:center; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:13px; padding:12px 4px; cursor:pointer; transition:transform 0.1s,background 0.1s; }
+        .month-btn:active { transform:scale(0.94); background:rgba(255,255,255,0.08); }
+
+        ::-webkit-scrollbar { width:0; }
+        #loginScreen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; padding:30px; position:fixed; inset:0; background:var(--bg); z-index:9999; }
+        #loginScreen.gizli { display:none; }
+        .login-title { font-size:22px; font-weight:900; color:white; margin-bottom:6px; text-align:center; }
+        .login-sub { font-size:13px; color:var(--text2); text-align:center; margin-bottom:36px; line-height:1.5; }
+        .login-google-btn { display:flex; align-items:center; gap:12px; background:white; color:#1a0900; border:none; border-radius:16px; padding:16px 28px; font-size:15px; font-weight:800; cursor:pointer; width:100%; max-width:320px; justify-content:center; box-shadow:0 8px 0 #bbb; transition:transform 0.1s; }
+        .login-google-btn:active { transform:scale(0.95) translateY(4px); }
+        .login-info { margin-top:24px; font-size:11px; color:var(--text3); text-align:center; line-height:1.6; }
+        #userBar { display:flex; align-items:center; justify-content:space-between; padding:5px 10px 2px; flex-shrink:0; }
+        .user-info { display:flex; align-items:center; gap:8px; }
+        .uph { width:24px; height:24px; border-radius:50%; background:linear-gradient(135deg,#1a6dff,#0a35a8); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:white; flex-shrink:0; }
+        .uname { font-size:11px; font-weight:700; color:rgba(255,255,255,0.7); max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sync-status { font-size:9px; font-weight:700; padding:3px 8px; border-radius:8px; }
+        .sync-ok { background:rgba(0,230,118,0.15); color:#00e676; }
+        .sync-loading { background:rgba(255,171,0,0.15); color:#ffab00; }
+        .sync-err { background:rgba(255,61,87,0.15); color:#ff3d57; }
+        .cikis-btn { background:rgba(255,61,87,0.1); border:1px solid rgba(255,61,87,0.25); color:#ff3d57; border-radius:8px; padding:4px 10px; font-size:9px; font-weight:800; cursor:pointer; }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+<div class="fixed-top">
+
+    <!-- TEK BÜYÜK BİRLEŞİK BLOK -->
+    <div style="background:rgba(255,255,255,0.04); backdrop-filter:blur(20px); border-radius:18px 18px 0 0; border:1px solid rgba(255,255,255,0.1); border-bottom:none; overflow:hidden; margin-bottom:0;">
+
+        <!-- SATIR 1: 2026 YILLIK | MART AYLIK | SAAT ÜCRETİ | VERGİ -->
+        <div style="display:flex; border-bottom:1px solid rgba(255,255,255,0.07);">
+
+            <!-- 2026 YILLIK -->
+            <div style="flex:1; padding:8px 10px; border-right:1px solid rgba(255,255,255,0.07);">
+                <div class="annual-year" id="annualYearTitle" style="margin-bottom:4px; font-size:10px;">2026 YILLIK</div>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div style="display:flex; gap:4px;">
+                        <span class="annual-chip normal" id="yillikNormalGun" style="font-size:10px;">0 GÜN</span>
+                        <span class="annual-chip normal" id="yillikNormalSaat" style="font-size:10px;">0 SAAT</span>
+                    </div>
+                    <div style="display:flex; gap:4px;">
+                        <span class="annual-chip pazar" id="yillikPazarGun" style="font-size:10px;">0 GÜN</span>
+                        <span class="annual-chip pazar" id="yillikPazarSaat" style="font-size:10px;">0 SAAT</span>
+                    </div>
+                    <span class="annual-chip highlight" id="annualTotalValue" style="font-size:11px;">0 ₺</span>
+                </div>
+            </div>
+
+            <!-- MART AYLIK -->
+            <div style="flex:1; padding:8px 10px; border-right:1px solid rgba(255,255,255,0.07);">
+                <div class="annual-year" id="monthCardShortTitle" style="margin-bottom:4px; font-size:10px;">MART AYLIK</div>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div style="display:flex; gap:4px;">
+                        <span class="annual-chip normal" id="monthNormalGun" style="font-size:10px;">0 GÜN</span>
+                        <span class="annual-chip normal" id="monthNormalSaat" style="font-size:10px;">(0 SAAT)</span>
+                    </div>
+                    <div style="display:flex; gap:4px;">
+                        <span class="annual-chip pazar" id="monthPazarGun" style="font-size:10px;">0 GÜN</span>
+                        <span class="annual-chip pazar" id="monthPazarSaat" style="font-size:10px;">(0 SAAT)</span>
+                    </div>
+                    <span class="annual-chip highlight kazanc-anim" id="toplamTL" style="font-size:12px; font-weight:900;">0 ₺</span>
+                </div>
+            </div>
+
+            <!-- SAAT ÜCRETİ -->
+            <div class="ucret-btn btn-3d btn-blue" style="flex:1.3; border-radius:14px !important; margin:4px;">
+                <div class="ucret-label" style="font-size:7px; letter-spacing:1px; color:rgba(255,255,255,0.6); font-weight:800; text-transform:uppercase; margin-bottom:1px;">Saat Ücreti</div>
+                <input type="number" id="anaSaatUcreti" class="main-input" inputmode="decimal" pattern="[0-9]*" placeholder="0.00" oninput="guncelle(); saveSettings();" style="font-size:14px; font-weight:900; line-height:1;">
+                <button id="lockBtn" class="lock-btn" onclick="toggleLock()" style="margin-top:3px; align-self:flex-start;">TAMAM</button>
+            </div>
+
+            <!-- VERGİ -->
+            <div class="vergi-btn btn-3d btn-yellow" id="vergiBox" onclick="modalAc('taxModal')" style="flex:0.7; border-radius:14px !important; margin:4px;">
+                <div class="vergi-label-txt" id="vergiLabelTxt" style="color:rgba(255,210,80,0.7)">VERGİ</div>
+                <div class="vergi-value-txt" id="taxDisplay" style="color:#ffe566">SEÇ</div>
+            </div>
+
+        </div>
+
+        <!-- SATIR 2: TARİH | AY - gap -->
+        <div style="display:flex; gap:6px; padding:6px; border-bottom:1px solid rgba(255,255,255,0.07);">
+            <button class="btn-3d btn-blue shift-btn" onclick="modalAc('dateModal')" id="dateDisplay" style="flex:1;">📅 TARİH SEÇ</button>
+            <button class="btn-3d btn-blue shift-btn" onclick="modalAc('monthModal')" id="monthDisplay" style="flex:1;">📊 AY SEÇ</button>
+        </div>
+
+        <!-- SATIR 3: 8-4 | 4-12 | 12-8 | PAZAR -->
+        <div style="display:flex; gap:6px; padding:6px 6px 0 6px;">
+            <button class="btn-3d btn-blue shift-btn" onclick="modalAc('v84Modal')" style="flex:1;">8-4</button>
+            <button class="btn-3d btn-blue shift-btn" onclick="modalAc('v412Modal')" style="flex:1;">4-12</button>
+            <button class="btn-3d btn-blue shift-btn" onclick="modalAc('v128Modal')" style="flex:1;">12-8</button>
+            <button class="btn-3d btn-red shift-btn" onclick="pazarModalAc()" style="flex:1;">PAZAR</button>
+        </div>
+
+    </div>
+
+    <!-- TABLO BAŞLIĞI SABİT -->
+    <div style="margin:0; background:rgba(255,255,255,0.03); backdrop-filter:blur(10px); border-left:none; border-right:none; border-top:1px solid rgba(255,255,255,0.08); border-bottom:1px solid rgba(255,255,255,0.08); overflow:hidden;">
+        <div id="dinamikBaslik" class="table-title-bar" style="border-radius:0;">MESAİLERİM</div>
+        <div class="table-header" style="margin:0; border-radius:0;">
+            <span>TARİH</span><span>MESAİ TÜRÜ</span><span>SAAT</span><span>ÜCRET</span>
+        </div>
+    </div>
+
+</div><!-- /fixed-top -->
+
+<div class="scroll-area" style="padding-left:0; padding-right:0; padding-top:0;">
+    <div style="background:rgba(255,255,255,0.03); backdrop-filter:blur(10px); border:none; overflow:hidden; margin:0;">
+        <div id="liste"></div>
+    </div>
+</div><!-- /scroll-area -->
+</div><!-- /app-wrapper -->
+
+<!-- PAZAR MODAL -->
+<div id="pazarModal" class="modal-overlay">
+    <div class="modal-content">
+        <h2 style="color:#ff3d57">🔴 Pazar Mesaisi</h2>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:4px;">Kaç saat mesai yaptınız?</p>
+        <input type="number" id="pazarSaatInput" class="modal-input" style="color:#ff3d57;" inputmode="decimal">
+        <div class="modal-btn-row">
+            <button class="btn-cancel" onclick="kapatModal('pazarModal')">İptal</button>
+            <button class="btn-3d btn-red" style="padding:14px;font-size:14px;" onclick="pazarKaydet()">Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<!-- DATE MODAL -->
+<div id="dateModal" class="modal-overlay">
+    <div class="modal-content" style="max-width:370px;">
+        <h3 id="currentMonthYear" style="color:var(--blue);font-size:15px;margin-bottom:6px;">Takvim</h3>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);">
+            <div class="day-header">Pt</div><div class="day-header">Sa</div><div class="day-header">Ça</div><div class="day-header">Pe</div><div class="day-header">Cu</div><div class="day-header">Ct</div><div class="day-header" style="color:#ff3d57">Pz</div>
+        </div>
+        <div id="daysGrid"></div>
+        <button class="close-btn" onclick="kapatModal('dateModal')">Kapat</button>
+    </div>
+</div>
+
+<!-- MONTH MODAL -->
+<div id="monthModal" class="modal-overlay">
+    <div class="modal-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <button onclick="yilDegistir(-1)" style="background:none;border:none;color:var(--blue);font-size:22px;padding:4px 10px;cursor:pointer">◀</button>
+            <h2 id="modalYearTitle" style="margin:0;font-size:17px;"></h2>
+            <button onclick="yilDegistir(1)" style="background:none;border:none;color:var(--blue);font-size:22px;padding:4px 10px;cursor:pointer">▶</button>
+        </div>
+        <div id="monthModalGrid"></div>
+        <button class="close-btn" onclick="kapatModal('monthModal')">Kapat</button>
+    </div>
+</div>
+
+<!-- TAX MODAL -->
+<div id="taxModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Vergi Dilimi Seç</h3>
+        <button class="btn-3d tax-modal-btn btn-vg-15" onclick="vergiSec(15)">%15 Vergi Dilimi</button>
+        <button class="btn-3d tax-modal-btn btn-vg-20" onclick="vergiSec(20)">%20 Vergi Dilimi</button>
+        <button class="btn-3d tax-modal-btn btn-vg-27" onclick="vergiSec(27)">%27 Vergi Dilimi</button>
+        <button class="btn-3d tax-modal-btn btn-vg-35" onclick="vergiSec(35)">%35 Vergi Dilimi</button>
+        <button class="close-btn" onclick="kapatModal('taxModal')">Kapat</button>
+    </div>
+</div>
+
+<!-- 8-4 MODAL -->
+<div id="v84Modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>8-4 Vardiyası</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <button class="btn-3d btn-blue shift-btn" onclick="hizliEkle('8-4 Erken');kapatModal('v84Modal')">ERKEN</button>
+            <button class="btn-3d btn-yellow shift-btn" onclick="hizliEkle('8-4 Sarkma');kapatModal('v84Modal')">SARKMA</button>
+        </div>
+        <button class="close-btn" onclick="kapatModal('v84Modal')">Kapat</button>
+    </div>
+</div>
+
+<!-- 4-12 MODAL -->
+<div id="v412Modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>4-12 Vardiyası</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <button class="btn-3d btn-blue shift-btn" onclick="hizliEkle('4-12 Erken','412-erken');kapatModal('v412Modal')">ERKEN</button>
+            <button class="btn-3d btn-yellow shift-btn" onclick="hizliEkle('4-12 Sarkma','412-sarkma');kapatModal('v412Modal')">SARKMA</button>
+        </div>
+        <button class="close-btn" onclick="kapatModal('v412Modal')">Kapat</button>
+    </div>
+</div>
+
+<!-- 12-8 MODAL -->
+<div id="v128Modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>12-8 Vardiyası</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <button class="btn-3d btn-blue shift-btn" onclick="hizliEkle('12-8 Erken','128-erken');kapatModal('v128Modal')">ERKEN</button>
+            <button class="btn-3d btn-yellow shift-btn" onclick="hizliEkle('12-8 Sarkma');kapatModal('v128Modal')">SARKMA</button>
+        </div>
+        <button class="close-btn" onclick="kapatModal('v128Modal')">Kapat</button>
+    </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="color:#ff3d57">🗑 Sil?</h3>
+        <p id="deleteInfo" style="color:var(--text2);font-size:13px;"></p>
+        <button id="confirmDeleteBtn" class="btn-delete-confirm">SİL</button>
+        <button class="btn-delete-cancel" onclick="kapatModal('deleteModal')">İPTAL</button>
+    </div>
+</div>
+
+<!-- UYARI MODAL -->
+<div id="uyariModal" class="modal-overlay">
+    <div class="modal-content" style="text-align:center;">
+        <div style="font-size:36px;margin-bottom:10px;">⚠️</div>
+        <h3 style="color:#ff8fa3;margin-bottom:8px;">Kayıt Yapılamadı</h3>
+        <p id="uyariMesaj" style="color:var(--text2);font-size:13px;line-height:1.5;margin-bottom:16px;"></p>
+        <button class="btn-3d btn-red" style="width:100%;padding:14px;font-size:14px;" onclick="kapatModal('uyariModal')">TAMAM</button>
+    </div>
+</div>
+
+<!-- LOCAL STORAGE -->
+<script>
+window._liste = [];
+window._FID = "local";
+window._vergi = null;
+window._locked = false;
+
+const LS_LISTE = "MESAI_LISTE_V1";
+const LS_SETTINGS = "MESAI_SETTINGS_V1";
+
+window._kaydetListe = function() {
+    localStorage.setItem(LS_LISTE, JSON.stringify(window._liste));
+};
+
+window._kaydetSettings = function() {
+    localStorage.setItem(LS_SETTINGS, JSON.stringify({
+        ucret: document.getElementById('anaSaatUcreti').value,
+        vergi: window._vergi,
+        isLocked: window._locked
+    }));
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    try { window._liste = JSON.parse(localStorage.getItem(LS_LISTE)) || []; } catch(e) { window._liste = []; }
+    try {
+        const s = JSON.parse(localStorage.getItem(LS_SETTINGS));
+        if (s) {
+            document.getElementById('anaSaatUcreti').value = s.ucret || "";
+            window._vergi = s.vergi || null;
+            window._locked = s.isLocked || false;
+            if (window._vergi) {
+                document.getElementById('taxDisplay').innerText = '%' + window._vergi;
+                setTimeout(() => { if(typeof applyVergiRenk==='function') applyVergiRenk(window._vergi); }, 50);
+            }
+            setTimeout(() => {
+                aktifVergi = window._vergi;
+                isLocked = window._locked;
+                if(typeof applyLockUI==='function') applyLockUI();
+            }, 100);
+        }
+    } catch(e) {}
+    if(typeof tarihGuncelleUI==='function') tarihGuncelleUI();
+    if(typeof guncelle==='function') guncelle();
+});
+</script>
+
+<script>
+    const SETTINGS_NAME = "SETTINGS_V15_FINAL";
+    const aylar = ["OCAK","ŞUBAT","MART","NİSAN","MAYIS","HAZİRAN","TEMMUZ","AĞUSTOS","EYLÜL","EKİM","KASIM","ARALIK"];
+    const gunAdlari = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
+
+    let aktifTarih = new Date();
+    let seciliAy = aktifTarih.getMonth();
+    let aktifYil = aktifTarih.getFullYear();
+    let aktifVergi = null;
+    let isLocked = false;
+    window._FID = null;
+    window._liste = [];
+    window._vergi = null;
+    window._locked = false;
+
+    // Vergi renklerine göre stil
+    const vergiStil = {
+        15: { cls:'btn-vg-15', valColor:'rgba(80,255,150,0.95)', lblColor:'rgba(80,255,150,0.6)' },
+        20: { cls:'btn-vg-20', valColor:'rgba(160,255,80,0.95)', lblColor:'rgba(160,255,80,0.6)' },
+        27: { cls:'btn-vg-27', valColor:'rgba(255,180,80,0.95)', lblColor:'rgba(255,180,80,0.6)' },
+        35: { cls:'btn-vg-35', valColor:'rgba(255,120,120,0.95)', lblColor:'rgba(255,120,120,0.6)' },
+    };
+
+    function applyVergiRenk(oran) {
+        const box = document.getElementById('vergiBox');
+        const valEl = document.getElementById('taxDisplay');
+        const lblEl = document.getElementById('vergiLabelTxt');
+        box.classList.remove('btn-yellow','btn-vg-15','btn-vg-20','btn-vg-27','btn-vg-35');
+        if (oran && vergiStil[oran]) {
+            box.classList.add(vergiStil[oran].cls);
+            valEl.style.color = vergiStil[oran].valColor;
+            lblEl.style.color = vergiStil[oran].lblColor;
+        } else {
+            box.classList.add('btn-yellow');
+            valEl.style.color = '#ffe566';
+            lblEl.style.color = 'rgba(255,210,80,0.7)';
+        }
+    }
+
+    const DATA_KEY = "MESAI_VERILER_V1";
+
+    function init() {}
+
+    function yukleListe() {}
+
+    function kaydetListe() { window._kaydetListe && window._kaydetListe(); }
+
+    function toggleLock() {
+        if (!isLocked && !document.getElementById('anaSaatUcreti').value) return;
+        isLocked = !isLocked;
+        window._locked = isLocked;
+        applyLockUI();
+        saveSettings();
+        if (!isLocked) {
+            setTimeout(() => { const inp = document.getElementById('anaSaatUcreti'); inp.focus(); inp.select(); }, 50);
+        }
+    }
+
+    function applyLockUI() {
+        document.getElementById('anaSaatUcreti').disabled = isLocked;
+        document.getElementById('lockBtn').innerText = isLocked ? "DÜZENLE" : "TAMAM";
+    }
+
+    function vergiSec(oran) {
+        aktifVergi = oran;
+        window._vergi = oran;
+        document.getElementById('taxDisplay').innerText = `%${oran}`;
+        applyVergiRenk(oran);
+        saveSettings();
+        kapatModal('taxModal');
+        guncelle();
+    }
+
+    function saveSettings() {
+        window._vergi = aktifVergi;
+        window._locked = isLocked;
+        window._kaydetSettings && window._kaydetSettings();
+    }
+
+    function modalAc(id) {
+        if (id === 'monthModal') ayGridDoldur();
+        if (id === 'dateModal') gunGridDoldur();
+        const el = document.getElementById(id);
+        el.style.display = 'flex';
+        requestAnimationFrame(() => el.classList.add('acik'));
+    }
+    function kapatModal(id) {
+        const el = document.getElementById(id);
+        el.classList.remove('acik');
+        el.style.display = 'none';
+    }
+
+    function pazarModalAc() {
+        document.getElementById('pazarSaatInput').value = "";
+        modalAc('pazarModal');
+        setTimeout(() => document.getElementById('pazarSaatInput').focus(), 300);
+    }
+
+    function tarihGuncelleUI() {
+        const d = aktifTarih.getDate().toString().padStart(2,'0');
+        const m = (aktifTarih.getMonth()+1).toString().padStart(2,'0');
+        document.getElementById('dateDisplay').innerText = `📅 ${d}.${m}.${aktifYil} ${gunAdlari[aktifTarih.getDay()]}`;
+        document.getElementById('monthDisplay').innerText = `📊 ${aylar[seciliAy]} ${aktifYil}`;
+        document.getElementById('annualYearTitle').innerText = aktifYil + ' YILI';
+        if (document.getElementById('monthCardShortTitle')) document.getElementById('monthCardShortTitle').innerText = aylar[seciliAy].toUpperCase() + " AYLIK";
+    }
+
+    function gunGridDoldur() {
+        const grid = document.getElementById('daysGrid');
+        grid.innerHTML = "";
+        document.getElementById('currentMonthYear').innerText = `${aylar[seciliAy]} ${aktifYil}`;
+        const ilkGun = new Date(aktifYil, seciliAy, 1).getDay();
+        const bosluk = (ilkGun === 0) ? 6 : ilkGun - 1;
+        const sonGun = new Date(aktifYil, seciliAy+1, 0).getDate();
+        const bugun = new Date();
+        for (let i = 0; i < bosluk; i++) grid.appendChild(document.createElement('div'));
+        for (let d = 1; d <= sonGun; d++) {
+            const btn = document.createElement('div');
+            btn.className = "day-cell";
+            const tempDate = new Date(aktifYil, seciliAy, d);
+            const isToday = (
+                bugun.getDate() === d &&
+                bugun.getMonth() === seciliAy &&
+                bugun.getFullYear() === aktifYil
+            );
+            if (isToday) {
+                btn.classList.add('day-cell-today');
+            }
+            if (tempDate.getDay() === 0 && !isToday) btn.style.color = "#ff3d57";
+            btn.innerText = d;
+            btn.onclick = () => {
+                aktifTarih = new Date(aktifYil, seciliAy, d);
+                tarihGuncelleUI(); kapatModal('dateModal'); guncelle();
+            };
+            grid.appendChild(btn);
+        }
+    }
+
+    function ayGridDoldur() {
+        const grid = document.getElementById('monthModalGrid');
+        grid.innerHTML = "";
+        document.getElementById('modalYearTitle').innerText = aktifYil;
+        const tum = window._liste || [];
+        const bugunAy = new Date().getMonth();
+        const bugunYil = new Date().getFullYear();
+        aylar.forEach((ay, idx) => {
+            let ayToplam = 0;
+            tum.filter(x => x.ayIndex === idx && x.yil === aktifYil).forEach(i => { ayToplam += hesaplaDinamik(i.tip, i.saat, i.ucret || null, i.vergi || null); });
+            const btn = document.createElement('div');
+            btn.className = "month-btn";
+            if (idx === bugunAy && aktifYil === bugunYil) {
+                btn.style.border = "1.5px solid rgba(26,109,255,0.9)";
+                btn.style.boxShadow = "0 0 6px 1px rgba(26,109,255,0.6), 0 0 12px 3px rgba(26,109,255,0.25)";
+                btn.style.animation = "neonPulseBlue 2s ease-in-out infinite";
+            }
+            btn.innerHTML = `<span style="font-size:11px;font-weight:800">${ay}</span><span style="font-size:10px;color:var(--green);margin-top:4px">${ayToplam > 0 ? ayToplam.toLocaleString('tr-TR') + ' ₺' : '-'}</span>`;
+            btn.onclick = () => {
+                seciliAy = idx;
+                aktifTarih = new Date(aktifYil, idx, aktifTarih.getDate());
+                const maxGun = new Date(aktifYil, idx+1, 0).getDate();
+                if (aktifTarih.getDate() > maxGun) aktifTarih = new Date(aktifYil, idx, maxGun);
+                tarihGuncelleUI();
+                kapatModal('monthModal');
+                guncelle();
+            };
+            grid.appendChild(btn);
+        });
+    }
+
+    function yilDegistir(fark) { aktifYil += fark; ayGridDoldur(); }
+
+    function hesaplaDinamik(tip, saat, customUcret = null, customVergi = null) {
+        const ucret = (customUcret !== null && customUcret !== undefined) ? customUcret : (parseFloat(document.getElementById('anaSaatUcreti').value) || 0);
+        const vOran = (customVergi !== null && customVergi !== undefined) ? customVergi : (aktifVergi || 15);
+        const brut = ucret * 225;
+        let kesinti = (vOran === 15) ? 0.30 : (vOran === 20) ? 0.35 : (vOran === 27) ? 0.42 : 0.48;
+        const netSaat = (brut - (brut * kesinti)) / 30 / 7.5;
+        return tip === 'normal' ? Math.round(netSaat * 8) : Math.round(netSaat * 3 * saat);
+    }
+
+    function tarihHesapla(vardiyaTip) {
+        const suan = new Date();
+        const saat = suan.getHours();
+        let kayitTarih = new Date(aktifTarih);
+
+        // 4-12 Erken: gece 00:00-11:59 arası eklenirse → -1 gün (vardiyaya başladığın gün)
+        if (vardiyaTip === '412-erken' && saat >= 0 && saat < 12) {
+            kayitTarih.setDate(kayitTarih.getDate() - 1);
+        }
+
+        // 4-12 Sarkma: saat 16:00-23:59 arası eklenirse → +1 gün (sarktığın gün)
+        if (vardiyaTip === '412-sarkma' && saat >= 16 && saat <= 23) {
+            kayitTarih.setDate(kayitTarih.getDate() + 1);
+        }
+        // 4-12 Sarkma: 00:00-11:59 arası → değişiklik yok (zaten ertesi gün)
+
+        // 12-8 Erken: gece 00:00-11:59 arası eklenirse → -1 gün (vardiyaya başladığın gün)
+        if (vardiyaTip === '128-erken' && saat >= 0 && saat < 12) {
+            kayitTarih.setDate(kayitTarih.getDate() - 1);
+        }
+
+        return kayitTarih;
+    }
+
+    function uyariGoster(mesaj) {
+        document.getElementById('uyariMesaj').innerText = mesaj;
+        document.getElementById('uyariModal').style.display = 'flex';
+    }
+
+    function ekle(tur, saat, tip, vardiyaTip = null) {
+        if (!document.getElementById('anaSaatUcreti').value || !aktifVergi) { uyariGoster("Lütfen önce saat ücreti ve vergi dilimini giriniz."); return; }
+        const kayitTarih = vardiyaTip ? tarihHesapla(vardiyaTip) : new Date(aktifTarih);
+        const kayitYil = kayitTarih.getFullYear();
+        const kayitAy = kayitTarih.getMonth();
+        const kayitGun = kayitTarih.getDate();
+
+        const ayniGunVar = window._liste.some(x => {
+            const xTarih = new Date(x.timestamp);
+            return xTarih.getFullYear() === kayitYil && xTarih.getMonth() === kayitAy && xTarih.getDate() === kayitGun;
+        });
+        if (ayniGunVar) {
+            uyariGoster(`${kayitGun.toString().padStart(2,'0')}.${(kayitAy+1).toString().padStart(2,'0')}.${kayitYil} tarihine ait zaten bir mesai kaydı bulunmaktadır.`);
+            return;
+        }
+
+        const id = Date.now();
+        const veri = {
+            id, timestamp: kayitTarih.getTime(),
+            tarihGorunumu: `${kayitGun.toString().padStart(2,'0')}.${(kayitAy+1).toString().padStart(2,'0')}.${kayitYil} ${gunAdlari[kayitTarih.getDay()]}`,
+            tur, saat, tip, ayIndex: kayitAy, yil: kayitYil,
+            ucret: parseFloat(document.getElementById('anaSaatUcreti').value) || 0,
+            vergi: aktifVergi || 15
+        };
+        window._liste.push(veri);
+        kaydetListe();
+        guncelle();
+    }
+
+    function hizliEkle(tur, vardiyaTip = null) { ekle(tur, 4, 'normal', vardiyaTip); }
+
+    function pazarKaydet() {
+        const val = document.getElementById('pazarSaatInput').value;
+        if (val) { ekle('Pazar', parseFloat(val), 'pazar'); kapatModal('pazarModal'); }
+    }
+
+    function guncelle() {
+        const tum = window._liste || [];
+        const div = document.getElementById('liste');
+        div.innerHTML = "";
+        document.getElementById('dinamikBaslik').innerText = `${aktifYil} ${aylar[seciliAy]} AYI MESAİLERİM`;
+
+        let tNS_Ay=0, tPS_Ay=0, tTL_Ay=0, yNS=0, yPS=0, yTL=0;
+        const sirali = tum.sort((a,b) => b.timestamp - a.timestamp);
+        let ayRows = [];
+
+        sirali.forEach(i => {
+            const tutar = hesaplaDinamik(i.tip, i.saat, i.ucret || null, i.vergi || null);
+            if (i.yil === aktifYil) {
+                yTL += tutar;
+                if (i.tip === 'normal') yNS += i.saat; else yPS += i.saat;
+            }
+            if (i.ayIndex === seciliAy && i.yil === aktifYil) {
+                tTL_Ay += tutar;
+                if (i.tip === 'normal') tNS_Ay += i.saat; else tPS_Ay += i.saat;
+                ayRows.push({ i, tutar });
+            }
+        });
+
+        if (ayRows.length === 0) {
+            div.innerHTML = `<div class="empty-state">Bu ay için mesai kaydı yok</div>`;
+        } else {
+            ayRows.forEach(({ i, tutar }) => {
+                const row = document.createElement('div');
+                row.className = i.tip === 'normal' ? 'row row-normal' : 'row row-pazar';
+                const c = i.tip === 'normal' ? '#7ec8a0' : '#e8909a';
+                row.innerHTML = `<span style="color:${c}">${i.tarihGorunumu}</span><span style="color:${c}">${i.tur}</span><span style="color:${c}">${i.saat}s</span><span style="color:${c}">${tutar.toLocaleString('tr-TR')}₺</span>`;
+                row.onclick = () => {
+                    document.getElementById('deleteInfo').innerText = `${i.tarihGorunumu} - ${i.tur} silinecek mi?`;
+                    modalAc('deleteModal');
+                    document.getElementById('confirmDeleteBtn').onclick = () => {
+                        window._liste = window._liste.filter(x => x.id !== i.id);
+                        kaydetListe();
+                        kapatModal('deleteModal'); guncelle();
+                    };
+                };
+                div.appendChild(row);
+            });
+        }
+
+        document.getElementById('yillikNormalGun').innerText = Math.floor(yNS/4) + " GÜN";
+        document.getElementById('yillikNormalSaat').innerText = yNS + " SAAT";
+        document.getElementById('yillikPazarGun').innerText = Math.floor(yPS/8) + " GÜN";
+        document.getElementById('yillikPazarSaat').innerText = yPS + " SAAT";
+        document.getElementById('annualTotalValue').innerText = yTL.toLocaleString('tr-TR') + " ₺";
+
+        // Aylık kart - gun/saat hesapla
+        const normalGun = tNS_Ay / 4;
+        const pazarGun  = tPS_Ay / 8;
+        const normalGunStr = Number.isInteger(normalGun) ? normalGun + " GÜN" : normalGun.toFixed(1) + " GÜN";
+        const pazarGunStr  = Number.isInteger(pazarGun)  ? pazarGun  + " GÜN" : pazarGun.toFixed(1)  + " GÜN";
+        document.getElementById('monthNormalGun').innerText  = normalGunStr;
+        document.getElementById('monthNormalSaat').innerText = "(" + tNS_Ay + " SAAT)";
+        document.getElementById('monthPazarGun').innerText   = pazarGunStr;
+        document.getElementById('monthPazarSaat').innerText  = "(" + tPS_Ay + " SAAT)";
+        document.getElementById('toplamTL').innerText = tTL_Ay.toLocaleString('tr-TR') + " ₺";
+    }
+
+    // init: DOMContentLoaded ile tetikleniyor
+</script>
+</body>
+</html>
